@@ -1,0 +1,207 @@
+<%-include('./layouts/header.ejs')%>
+<style>
+  .container-fluid {
+    width: 100%;
+    height: 100%;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e7e7e7;
+    border-radius: 3px;
+    height: 30px;
+  }
+
+  .containe {
+    width: 100%;
+    height: 550px;
+  }
+  .containe .containe_content{
+    float: left;
+    height: 500px;
+  }
+  .containe .containe_content ul {
+    overflow-y: scroll;
+    height: 500px;
+  }
+  .containe .containe_content ul li {
+    float: left;
+    width:5%;
+    text-align: center;
+    height: 25px;
+    line-height: 25px;
+    border:1px solid #ccc;
+    border-radius: 3px;
+    margin: 10px 8px 8px 0;
+    cursor: pointer;
+    font-size: 12px;
+
+    -moz-user-select:none;
+      -webkit-user-select: none;       
+      -ms-user-select: none; 
+  }
+  .containe .containe_content .containe_user li{
+    width: 60px;
+  }
+  .containe .containe_content .containe_station li{
+    width: 100px;
+  }
+ .containe_success{
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .pageson {
+    background-color: #f0ad4e;
+    font-weight: 700;
+    color: #fff;
+  }
+</style>
+<div class="container-fluid">
+  <div class="title">
+    <a href="/">首页</a>/用户管理
+  </div>
+  <div class="containe">
+    <div class="containe_content" style="width:15%;margin-right: 1%">
+      <h1 class="btn btn-info">用户名称</h1>
+      <ul class="containe_user" id="userid">
+
+        <% user1.forEach(item=>{%>
+        <li>
+          <%=item.username%>
+        </li>
+        <%})%>
+      </ul>
+    </div>
+
+    <div class="containe_content" style="width:31%;margin-right: 1%">
+      <h1 class="btn btn-primary">已选中场站</h1>
+      <ul class="containe_station" id="checkid">
+        <li>请选择用户</li>
+      </ul>
+    </div>
+    <script src="/node_modules/art-template/lib/template-web.js"></script>
+    <script type="text/template" id="tmpl">
+      {{ each checek}}
+      <li>
+          {{$value.Farm_ID}}
+        </li>
+      {{ /each}}
+    </script>
+    <div class="containe_content" style="width:52%">
+      <h1 class="btn btn-primary">全部场站</h1>
+      <ul class="containe_station" id="stationid">
+        <% station.forEach(item=>{%>
+        <li>
+          <%=item.Farm_ID%>
+        </li>
+        <%})%>
+      </ul>
+    </div>
+  </div>
+  <div class="containe_success">
+    <input type="submit" class="btn btn-success" id="success">
+  </div>
+</div>
+<script>
+  // 点击选中用户
+  $("#userid li").click(function () {
+    var item = $(this).index(); //获取索引下标 也从0开始
+    var textword = $(this).text(); //文本内容
+    $(this).siblings().removeClass('pageson');
+    $(this).addClass('pageson');
+    $.ajax({
+      url: '/user_manage',
+      type: 'post',
+      data: {
+        username: textword
+      },
+      dataType: 'json'
+    }).then(function (result) {
+      if (result.err_code === 1) {
+        var html = template('tmpl', result);
+        $('#checkid').html(html);
+        // 双击删除当前站
+        $('#checkid li').dblclick(function () {
+          $(this).remove();
+        })
+      } else {
+        alert("该用户暂未绑定集电线")
+        $("#checkid").find('li').remove()
+      }
+    })
+  })
+
+  // 双击添加场站
+  $("#stationid li").dblclick(function () {
+    var item = $(this).index(); //获取索引下标 也从0开始
+    var textword = $(this).text(); //文本内容
+    // console.log(textword)
+    // 判断是否选择用户
+    if ($("#userid li").hasClass("pageson")) {
+      $("#checkid").each(function () {
+        var a = false
+        $("#checkid").find('li').each(function () {
+          if ($(this).text() === textword) {
+            alert('改场站已经添加！！！')
+            return a = true;
+          }
+        });
+        // console.log(a)
+        if (a) {
+          return
+        } else {
+          $('#checkid').append("<li>" + textword + "</li>")
+        }
+      })
+    } else {
+      alert('请先选择用户名称！！！')
+    }
+  })
+
+  // 提交
+  $('#success').on('click', function () {
+    // 获取场站名称
+    var username1 = $("#userid .pageson").html().replace(/\s+/g, "")
+    console.log(username1)
+    $.ajax({
+      url: '/user_success',
+      type: 'post',
+      data: {
+        username: username1.replace(/\s+/g, ""),
+        station: $("#checkid li").text().replace(/\s+/g, "|")
+      },
+      dataType: 'json'
+    }).then(function (result) {
+      console.log(result)
+      if (result.err_code === 1) {
+        alert("提交成功！！！")
+        // location = location
+      }
+    })
+  })
+  // 双击删除该用户名
+  $("#userid li").dblclick(function () {
+    // alert('是否删除')
+    if (confirm('是否删除该用户！！！')) {
+      var deleuser = $(this).html();
+      $.ajax({
+        url: '/user_delete',
+        type: 'post',
+        data: {
+          username: deleuser
+        },
+        dataType: 'json'
+      }).then(function (result) {
+        console.log(result)
+        if (result.err_code === 1) {
+          alert("删除成功！！！")
+          location = location
+        }
+      })
+    }
+  })
+</script>
+<%-include('./layouts/footer.ejs')%>

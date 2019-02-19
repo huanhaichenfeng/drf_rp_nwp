@@ -1,0 +1,80 @@
+<%-include('./layouts/header.ejs')%>
+<style>
+  .container-fluid{
+    width: 100%;
+    height: 100%;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e7e7e7;
+    border-radius: 3px;
+    height: 30px;
+  }
+  .title .right {
+    float: right;
+    height: 26px;
+    line-height: 26px;
+  }
+  .title .right input {
+    width: 160px;
+    height: 22px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    padding-left:3px;
+  }
+  .litype {
+    float: left;
+    width: 10%;
+    height: 25px;
+    line-height:25px;
+    text-align: center;
+  }
+</style>
+<div class="container-fluid ">
+  <div class="title">
+    <a href="/">首页</a>
+    <%if(user[0].username === 'admin'){%>
+    <div class="right">
+      集电线编号:
+      <input type="text" id="right_id">
+      <a href="#" class="btn btn-success" style="padding:2px 6px;margin-bottom: 6px;" id="right_location">跳转</a>
+    </div>
+    <%}else{%>
+      <div class="right"></div>
+    <%}%>
+  </div>
+  <div class="table-responsive ">
+    <ul class="ultype">
+      <% sales.forEach(item=>{%>
+      <li class="litype">
+        <a href="/chart_time?id=<%=item.Farm_ID%>">
+          <%=item.Farm_ID%></a>
+      </li>
+      <%})%>
+    </ul>
+  </div>
+</div>
+
+<script>
+  $('#right_location').on('click', function (e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/query_id',
+      type: 'post',
+      data: {
+        valid: $("#right_id").val().toUpperCase(),
+      },
+      dataType: 'json'
+    }).then(function (result) {
+      if (result.code == 0) {
+        alert("集电线编号错误")
+      } else {
+        window.location.href = "/chart_time?id=" + result.valId;
+      }
+    })
+  })
+</script>
+<%-include('./layouts/footer.ejs')%>

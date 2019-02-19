@@ -1,0 +1,482 @@
+<%-include('./layouts/header.ejs')%>
+<script src="/node_modules/echarts/dist/echarts.min.js"></script>
+<style>
+  .container-fluid{
+    width: 100%;
+    height: 100%;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e7e7e7;
+    border-radius: 3px;
+    height: 30px;
+  }
+  .title .right {
+    float: right;
+    height: 26px;
+    line-height: 26px;
+  }
+  .title .right input {
+    width: 160px;
+    height: 22px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-bottom: 6px;
+    padding-left:3px;
+  }
+  .containe {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #ccc;
+  }
+  .containe .container_top {
+    height: 400px;
+    border-bottom: 1px solid #ccc;
+  }
+  .containe .container_top_left {
+    width: 15%;
+    height: 400px;
+    border-right: 1px solid #ccc;
+    font-size: 13px;
+    float: left;
+  }
+  .containe .container_top_left span {
+    display: inline-block;
+    width: 65px;
+    height: 30px;
+    margin: 6px 3px;
+  }
+  .containe .container_top_left input[type=date] {
+    width: 137px;
+    margin: 6px 3px;
+    border-radius: 3px;
+    border: none;
+    border: 1px solid #ccc;
+    font-size: 12px;
+    /* padding-left: 5px; */
+  }
+  .containe .container_top_left select {
+    width: 132px;
+    margin: 6px 3px;
+    border-radius: 3px;
+    border: none;
+    border: 1px solid #ccc;
+  }
+  .containe .container_top_left input[type=submit]{
+    width: 60px;
+    height: 25px;
+    line-height: 5px;
+    margin-left:70px; 
+     
+  }
+  .containe .container_top_chart {
+    float: right;
+    width: 85%;
+    height: 400px;
+    text-align: center;
+    position: relative;
+  }
+  .containe .container_top_chart .title {
+    height: 30px;
+    line-height: 30px;
+  }
+  .containe .container_top_chart a {
+    font-weight: 700;
+    color: #337ab7;
+    position: absolute;
+    right: 6px;
+    top: 0;
+  }
+  .container_table{
+    height: 150px;
+  }
+  .container_table table {
+    display: block;
+    /*设置相邻单元格的边框间的距离*/
+    border-spacing: 0;
+    /*表格设置合并边框模型*/
+    border-collapse: collapse;
+    text-align: center;
+  }
+  .container_table tbody{
+    display: block;
+    height: 150px;
+      overflow-y: scroll;
+  }
+  .container_table table thead,tbody tr{
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    text-align: left;
+  }
+  .containe .container_table table thead tr th {
+    font-weight: 700;
+  }
+  </style>
+<div class="container-fluid">
+  <div class="title">
+    <a href="/">首页</a>/风功率特性曲线
+    <%if(user[0].username === 'admin'){%>
+    <div class="right">
+      集电线编号:
+      <input type="text" id="right_id">
+      <a href="#" class="btn btn-success" style="padding:2px 6px;margin-bottom: 6px;" id="right_location">跳转</a>
+    </div>
+    <%}else{%>
+    <div class="right"></div>
+    <%}%>
+  </div>
+
+  <div class="containe">
+    <div class="container_top">
+      <form id="form">
+        <div class="container_top_left">
+          <span>集电线编号</span>
+          <b id="num">
+            <%=id%></b>
+          <br>
+          <span>开始日期</span>
+          <input type="date" id="name1">
+          <br>
+          <span>结束日期</span>
+          <input type="date" id="name2">
+
+          <br>
+          <span>层&nbsp;高&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <select id="speed">
+            <option value="speed10">10米</option>
+            <option value="speed30">30米</option>
+            <option value="speed50">50米</option>
+            <option value="speed60">60米</option>
+            <option value="speed70" selected>70米</option>
+            <option value="speed80">80米</option>
+            <option value="speed90">90米</option>
+            <option value="speed100">100米</option>
+          </select>
+          <br>
+          <input type="submit" value="查询" class="btn btn-danger">
+        </div>
+      </form>
+      <div class="container_top_chart">
+        <div class="title">
+          <b>风功率特性曲线</b>
+          <a href="/chart_time?id=<%=id%>">实际功率曲线展示图</a>
+        </div>
+        <div id="main" style="width: 600px;height:400px;"></div>
+      </div>
+    </div>
+    <div class="container_table">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>风向(m/s)</th>
+            <th>温度(m/s)</th>
+            <th>风速(m/s)</th>
+            <th>实际功率(MW)</th>
+          </tr>
+        </thead>
+        <tbody id="trList">
+          <% sales.forEach(item=>{%>
+          <tr>
+            <td class="Date_Time">
+              <%=item.Date_Time%>
+            </td>
+            <td class="direction70">
+              <%=item.direction70%>
+            </td>
+            <td class="temperature70">
+              <%=item.temperature70%>
+            </td>
+            <td class="speed70">
+              <%=item.speed70%>
+            </td>
+            <td class="RealPower">
+              <%=item.RealPower%>
+            </td>
+          </tr>
+          <%})%>
+        </tbody>
+        <script src="/node_modules/art-template/lib/template-web.js"></script>
+        <script type="text/template" id="tmpl">
+          {{ each results}}
+          <tr>
+              <td class="Date_Time">
+                  {{$value.Date_Time}}
+              </td>
+              <td class="direction70">
+                  {{$value.direction}}
+              </td>
+              <td class="temperature70">
+                  {{$value.temperature}}
+              </td>
+              <td class="speed70">
+                {{$value.speed}}
+              </td>
+              <td class="RealPower">
+                  {{$value.RealPower}}
+              </td>
+            </tr>
+          {{ /each}}
+        </script>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script type="text/javascript">
+  // 曲线图数据来源
+  var Date_Time = [];
+  var speed70 = [];
+  var RealPower = [];
+  $("#trList").find("tr").each(function () {
+    var tdArr = $(this).children()
+    Date_Time.push(tdArr.eq(0).html())
+    speed70.push(tdArr.eq(3).html())
+    RealPower.push(tdArr.eq(4).html())
+  })
+  // 判断数据源是否为空
+  if (Date_Time.length === 0) {
+    alert('该场站暂无数据')
+  } else {
+    // 查询内容提交
+    $(function () {
+      $('#form').on('submit', function (e) {
+        e.preventDefault();
+        $.ajax({
+          url: '/query_chart',
+          type: 'post',
+          data: {
+            id: $('#num').html().replace(/\s+/g, ""),
+            start: $('#name1').val(),
+            end: $('#name2').val(),
+            speed: $('#speed').val()
+          },
+          dataType: 'json'
+        }).then(function (result) {
+          if (result.err_code === 0) {
+            // console.log(result)
+            var html = template('tmpl', result);
+            $('tbody').html(html);
+
+            // 曲线图数据来源
+            var Date_Time = [];
+            var speed70 = [];
+            var RealPower = [];
+            $("#trList").find("tr").each(function () {
+              var tdArr = $(this).children()
+              Date_Time.push(tdArr.eq(0).html())
+              speed70.push(tdArr.eq(3).html())
+              RealPower.push(tdArr.eq(4).html())
+            })
+
+            var date1 = Date_Time[0].split("_")[0].replace(/\s+/g, "");
+            var date2 = Date_Time[Date_Time.length - 1].split("_")[0].replace(/\s+/g, "");
+            $("#name1").val(date1)
+            $("#name2").val(date2)
+            // console.log(date1)
+            // console.log(date2)
+
+            // 基于准备好的dom，初始化echarts实例
+            var worldMapContainer = document.getElementById('main');
+
+            //用于使chart自适应高度和宽度,通过窗体高宽计算容器高宽
+            var resizeWorldMapContainer = function () {
+              worldMapContainer.style.width = window.innerWidth / 1.2 + 'px';
+              worldMapContainer.style.height = window.innerHeight / 1.9 + 'px';
+            };
+
+            //设置容器高宽
+            resizeWorldMapContainer();
+            // 基于准备好的dom，初始化echarts实例
+            var myChart = echarts.init(worldMapContainer);
+
+            // 指定图表的配置项和数据
+            var option = {
+              tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                  type: 'cross'
+                }
+              },
+              grid: {
+                top: 28, //距离容器上边界25像素
+              },
+              color: ["#FF0000", "#00FF00"],
+              legend: {
+                data: ['实际功率', '风速'],
+                textStyle: {
+                  fontSize: 14
+                },
+                height: worldMapContainer.style.height,
+                width: worldMapContainer.style.width
+              },
+              toolbox: {
+                show: true,
+                orient: 'vertical', //垂直显示
+                y: 'top', //延Y轴居中
+                x: 'right', //居右显示
+              },
+              xAxis: {
+                name: "风速",
+                type: 'category',
+                axisLabel: {
+                  formatter: '{value}m/s',
+                  textStyle: {
+                    // color: '#ADAFAF'
+                    color: '#000',
+                    fontSize: 13
+                  }
+                },
+                data: speed70
+              },
+              yAxis: {
+                name: "功率",
+                type: 'value',
+                axisLabel: {
+                  formatter: '{value}MW',
+                  textStyle: {
+                    // color: '#ADAFAF'
+                    color: '#000',
+                    fontSize: 13
+                  }
+                }
+              },
+              series: [{
+                type: 'line',
+                smooth: true,
+                data: RealPower,
+                symbol: "none"
+              }]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option);
+
+            //用于使chart自适应高度和宽度
+            window.onresize = function () {
+              //重置容器高宽
+              resizeWorldMapContainer();
+              myChart.resize();
+            };
+          }
+        })
+      })
+    })
+
+
+
+    var date1 = Date_Time[0].split("_")[0].replace(/\s+/g, "");
+    var date2 = Date_Time[Date_Time.length - 1].split("_")[0].replace(/\s+/g, "");
+    $("#name1").val(date1)
+    $("#name2").val(date2)
+    // console.log(date1)
+    // console.log(date2)
+
+    // 基于准备好的dom，初始化echarts实例
+    var worldMapContainer = document.getElementById('main');
+
+    //用于使chart自适应高度和宽度,通过窗体高宽计算容器高宽
+    var resizeWorldMapContainer = function () {
+      worldMapContainer.style.width = window.innerWidth / 1.2 + 'px';
+      worldMapContainer.style.height = window.innerHeight / 2 + 'px';
+    };
+
+    //设置容器高宽
+    resizeWorldMapContainer();
+    // 基于准备好的dom，初始化echarts实例
+    var myChart = echarts.init(worldMapContainer);
+
+    // 指定图表的配置项和数据
+    var option = {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
+        }
+      },
+      grid: {
+        top: 28, //距离容器上边界25像素
+      },
+      color: ["#FF0000"],
+      legend: {
+        data: ['实际功率'],
+        textStyle: {
+          fontSize: 14
+        },
+        height: worldMapContainer.style.height,
+        width: worldMapContainer.style.width
+      },
+      toolbox: {
+        show: true,
+        orient: 'vertical', //垂直显示
+        y: 'top', //延Y轴居中
+        x: 'right', //居右显示
+      },
+      xAxis: {
+        name: "风速",
+        type: 'category',
+        axisLabel: {
+          formatter: '{value}m/s',
+          textStyle: {
+            // color: '#ADAFAF'
+            color: '#000',
+            fontSize: 13
+          }
+        },
+        data: speed70
+      },
+      yAxis: {
+        name: "功率",
+        type: 'value',
+        axisLabel: {
+          formatter: '{value}MW',
+          textStyle: {
+            // color: '#ADAFAF'
+            color: '#000',
+            fontSize: 13
+          }
+        }
+      },
+      series: [{
+        type: 'line',
+        smooth: true,
+        data: RealPower,
+        symbol: "none"
+      }]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+
+    //用于使chart自适应高度和宽度
+    window.onresize = function () {
+      //重置容器高宽
+      resizeWorldMapContainer();
+      myChart.resize();
+    };
+
+  }
+  // 根据集电线跳转路径
+  $('#right_location').on('click', function (e) {
+    e.preventDefault();
+    $.ajax({
+      url: '/query_id',
+      type: 'post',
+      data: {
+        valid: $("#right_id").val().toUpperCase(),
+      },
+      dataType: 'json'
+    }).then(function (result) {
+      if (result.code == 0) {
+        alert("集电线编号错误")
+      } else {
+        window.location.href = "/chart_time?id=" + result.valId;
+      }
+    })
+  })
+</script>
+<%-include('./layouts/footer.ejs')%>
